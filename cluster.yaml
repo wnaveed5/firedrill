@@ -1,0 +1,36 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: store
+spec:
+  configuration:
+    destinationPath: s3://backups/
+    endpointURL: http://s3:8333
+    s3Credentials:
+      accessKeyId:
+        name: s3-creds
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: s3-creds
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg
+spec:
+  instances: 3
+  affinity:
+    podAntiAffinityType: required
+  storage:
+    size: 1Gi
+  postgresql:
+    parameters:
+      archive_timeout: 60s
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: store

@@ -1,0 +1,25 @@
+name: drill
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - run: ./drill.sh up
+      - run: ./drill.sh all | tee results.txt
+      - run: |
+          {
+            echo '```'
+            cat results.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
